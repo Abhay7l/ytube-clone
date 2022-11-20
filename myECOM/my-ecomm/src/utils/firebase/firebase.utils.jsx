@@ -1,7 +1,12 @@
+//here in utilities files we interact with external service (here it is firebase);
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import{ getAuth,signInWithRedirect,signInWithPopup,GoogleAuthProvider} from "firebase/auth"
-import{ getFirestore,doc,getdoc,setdoc, getDoc, setDoc}from 'firebase/firestore'
+import{ getAuth,
+    signInWithRedirect,
+    signInWithPopup,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword} from "firebase/auth"
+import{ getFirestore,doc,getDoc,setDoc}from 'firebase/firestore'
 const firebaseConfig = {
   apiKey: "AIzaSyBgTZjn-8vC0cuSVwDdjgsnzzZGB8ImAjc",
   authDomain: "my-ecom-db-40a5f.firebaseapp.com",
@@ -10,18 +15,22 @@ const firebaseConfig = {
   messagingSenderId: "524805465360",
   appId: "1:524805465360:web:7b1d9ea3e26a7c0f15f195"
 }
-
 // Initialize Firebase
-const firebase = initializeApp(firebaseConfig)
-const provider = new GoogleAuthProvider()
-provider.setCustomParameters({
+const firebaseApp = initializeApp(firebaseConfig)
+const googleProvider = new GoogleAuthProvider()
+// we can habve different providers like microft ,github,facebook
+ 
+googleProvider.setCustomParameters({
     prompt:"select_account"
 })
 export const auth = getAuth()
-export const signInWithGooglePopup = () => signInWithPopup(auth,provider)
+export const signInWithGooglePopup = () => signInWithPopup(auth,googleProvider)
+export const signInWithGoogleRedirect =() => signInWithRedirect(auth,googleProvider)
+
 
 export const db=getFirestore();
 export const createUserDocumentFromAuth = async (userAuth)=>{
+    if(!userAuth) return;//if we dont get a userauth we return
     const userDocRef=doc(db,'users',userAuth.uid)
                 //parameters : 1 database 2 collections 3 uniqueIdentifier
     console.log(userDocRef);
@@ -38,7 +47,6 @@ export const createUserDocumentFromAuth = async (userAuth)=>{
     //if doesn't exist we create user with fields displayName,email,CreatedAt
         const { displayName, email}=userAuth
         const createdAt = new Date()
-
         try{
             await setDoc(userDocRef,{
                 displayName,
@@ -49,8 +57,12 @@ export const createUserDocumentFromAuth = async (userAuth)=>{
             console.log('error creating user ',error.message);
         }
     }
-
     //if user data exists
     //return  userDocRef
     return userDocRef
 }
+export const createAuthUserWithEmailAndPassword = async (email,password) => {
+    if(!email || !password) return ;//if we dont get emmail or password then we return;
+
+    return await createUserWithEmailAndPassword(auth,email,password);
+};
